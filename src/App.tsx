@@ -1,11 +1,11 @@
 import Viewer from "./pages/viewer";
+import { Layout } from "./components";
 
 function App() {
   return (
-    <div className="App">
-      <h1 className="animate-bounce-alt">Algorithm Viewer</h1>
+    <Layout>
       <Viewer />
-    </div>
+    </Layout>
   );
 }
 
