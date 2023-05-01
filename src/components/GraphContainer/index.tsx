@@ -1,9 +1,12 @@
+import useRandomGraph from "@/hooks/useRandomGraph";
+
 interface IProps {
   name: string;
 }
 
 const GraphContainer = (props: IProps) => {
-  console.log(props);
+
+  const { graph } = useRandomGraph({ isDirected: true });
 
   return (
     <div className="b-gray-200 b-solid b-rd-1 flex flex-col">
