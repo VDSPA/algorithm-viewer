@@ -23,7 +23,6 @@ declare namespace GraphAPI {
 
   interface Setting {
     isDirected: boolean;
-    matrix: Matrix;
   }
 
 }
