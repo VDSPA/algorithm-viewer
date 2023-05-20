@@ -4,12 +4,13 @@ declare namespace GraphAPI {
 
   type Node = {
     id: string;
-    x: number;
-    y: number;
+    x?: number;
+    y?: number;
+    label?: string;
   }
 
-
   type Edge = {
+    id: string;
     target: Node["id"];
     source: Node["id"];
     value: number;
@@ -21,7 +22,7 @@ declare namespace GraphAPI {
   }
 
   interface Setting {
-    isDirected: boolean
+    isDirected: boolean;
   }
 
 }

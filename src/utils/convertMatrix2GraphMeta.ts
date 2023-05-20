@@ -24,13 +24,14 @@ const convertMatrix2GraphMeta = (matrix: GraphAPI.Matrix) => {
     const edgeLength = checkMatrixIsSquare(matrix);
 
     for (let i = 0; i < edgeLength; i++) {
-      nodes.push({ id: i.toString(), x: 1, y: 1});
+      nodes.push({ id: i.toString(), label: i.toString() });
     }
 
     matrix.forEach((row, rowIndex) => {
       row.forEach((item, itemIndex) => {
         if (item > 0) {
           edges.push({
+            id: `${rowIndex.toString()}:${itemIndex.toString()}`,
             source: rowIndex.toString(),
             target: itemIndex.toString(),
             value: item

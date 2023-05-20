@@ -1,6 +1,6 @@
 import fetcher from "../fetcher";
 
-type FetchGraphData = GraphAPI.Setting;
+type FetchGraphData = Omit<GraphAPI.Setting, "matrix">;
 
 type FetchGraphResult = CommonAPI.IResponse<{
   graph: GraphAPI.Matrix
