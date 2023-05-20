@@ -15,16 +15,16 @@ describe("convertMatrix2GraphMeta", () => {
 
       const res: GraphAPI.Meta = {
         nodes: [
-          { id: "0", x: 1, y: 1 },
-          { id: "1", x: 1, y: 1 },
-          { id: "2", x: 1, y: 1 },
-          { id: "3", x: 1, y: 1 }
+          { id: "0", label: "0" },
+          { id: "1", label: "1" },
+          { id: "2", label: "2" },
+          { id: "3", label: "3" }
         ],
         edges: [
-          { target: "3", source: "0", value: 5 },
-          { target: "0", source: "1", value: 4 },
-          { target: "2", source: "2", value: 3 },
-          { target: "0", source: "3", value: 1 }
+          { id: "0:3", target: "3", source: "0", value: 5 },
+          { id: "1:0", target: "0", source: "1", value: 4 },
+          { id: "2:2", target: "2", source: "2", value: 3 },
+          { id: "3:0", target: "0", source: "3", value: 1 }
         ]
       };
 

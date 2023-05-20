@@ -12,7 +12,9 @@
   },
   "dependencies": {
     "@antv/g6": "^4.8.8",
+    "@types/lodash-es": "^4.17.7",
     "ahooks": "^3.7.6",
+    "lodash-es": "^4.17.21",
     "path": "^0.12.7",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
