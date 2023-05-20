@@ -4,7 +4,11 @@ interface IConfig<U extends object | undefined> {
 }
 
 const fetcher = async<T, U extends object | undefined = undefined>
-(url: string, config: IConfig<U>) => {
+(path: string, config: IConfig<U>) => {
+  let url = path;
+  if (import.meta.env.PROD) {
+    url = import.meta.env.VITE_HOST + url;
+  }
   return fetch(url, {
     method: config.method,
     body: JSON.stringify(config.data)
