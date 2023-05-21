@@ -10,7 +10,7 @@ interface IProps {
   name: string;
 }
 
-interface GraphContainerRef {
+export interface GraphContainerRef {
   next: () => void;
   previous: () => void;
   // TODO: jump: (id: string) => void,
