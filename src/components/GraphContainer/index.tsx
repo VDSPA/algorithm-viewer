@@ -13,7 +13,7 @@ interface IProps {
 export interface GraphContainerRef {
   next: () => void;
   previous: () => void;
-  // TODO: jump: (id: string) => void,
+  jump: (id: number) => void;
 }
 
 const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
@@ -30,6 +30,7 @@ const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
     return {
       next: handleNext,
       previous: handlePrevious,
+      jump: handleJump
     };
   }, []);
 
@@ -103,13 +104,20 @@ const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
   };
 
   const handlePrevious = () => {
-    if (step.current - 1 < 0 || !operateSequence) return;
+    if (step.current - 1 < 0
+      || !operateSequence
+      || step.current > operateSequence.length - 1
+    ) return;
 
     // reset current
     const currentStep = operateSequence[step.current];
-    currentStep.targets.forEach(target => {
-      handleHighlight(target.id, elementStyle[target.role]["default"]);
-    });
+    if (currentStep.type === "reset") {
+      handleReset();
+    } else {
+      currentStep.targets.forEach(target => {
+        handleHighlight(target.id, elementStyle[target.role]["default"]);
+      });
+    }
 
     // render previous
     const previousStep = operateSequence[step.current - 1];
@@ -165,6 +173,20 @@ const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
       graph?.edges.forEach(edge => {
         handleHighlight(edge.id, elementStyle.edge["default"]);
       });
+  };
+
+  const handleJump = (value: number) => {
+    if (!operateSequence) return;
+    const originStep = step.current;
+    if (value > originStep) {
+      for (let i = Math.min(value, operateSequence.length); i > originStep; i--) {
+        handleNext();
+      }
+    } else if (value < originStep) {
+      for (let i = value; i < Math.min(originStep, operateSequence.length); i++) {
+        handlePrevious();
+      }
+    }
   };
 
   return (

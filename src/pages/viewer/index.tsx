@@ -12,6 +12,7 @@ const algorithms = [
 ];
 
 const ViewerPage = () => {
+  const step = useRef<number>(-1);
 
   const graphManager = useRef<{
     name: string,
@@ -35,7 +36,9 @@ const ViewerPage = () => {
     return max;
   }, [resultArray]);
 
-  const handleSlide = (step: number) => {
+  const handleSlide = (value: number) => {
+    graphManager.current.forEach(item => item.ref?.jump(value));
+    step.current = value;
   };
 
   return (
@@ -46,7 +49,7 @@ const ViewerPage = () => {
         ))}
       </div>
       <div className="py-12 px-8">
-        <ProgressBar max={maxLength} onChange={handleSlide} />
+        <ProgressBar max={maxLength} onChange={handleSlide} defaultStep={step.current}/>
       </div>
     </section>
   );
