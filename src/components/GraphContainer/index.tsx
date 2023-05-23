@@ -98,9 +98,22 @@ const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
   }, [graph]);
 
   const handleHighlight = (id: string, style: any) => {
-    g6.current?.updateItem(id, {
-      style: style
-    });
+    try {
+      g6.current?.updateItem(id, {
+        style: style
+      });
+    } catch (e: Error) {
+      if (props.name === "floyd") {
+        const type = id.indexOf(":") >=0 ? "edge" : "node";
+        const model = {
+          id,
+          source: type === "edge" ? id.split(":")[0] : undefined,
+          target: type === "edge" ? id.split(":")[1] : undefined,
+        };
+
+      }
+      console.error(e);
+    }
   };
 
   const handlePrevious = () => {
@@ -167,12 +180,12 @@ const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
   };
 
   const handleReset = () => {
-      graph?.nodes.forEach(node => {
-        handleHighlight(node.id, elementStyle.node["default"]);
-      });
-      graph?.edges.forEach(edge => {
-        handleHighlight(edge.id, elementStyle.edge["default"]);
-      });
+    graph?.nodes.forEach(node => {
+      handleHighlight(node.id, elementStyle.node["default"]);
+    });
+    graph?.edges.forEach(edge => {
+      handleHighlight(edge.id, elementStyle.edge["default"]);
+    });
   };
 
   const handleJump = (value: number) => {
