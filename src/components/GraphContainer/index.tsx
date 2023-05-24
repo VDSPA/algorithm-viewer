@@ -1,7 +1,7 @@
 import useRandomGraph from "@/hooks/useRandomGraph";
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import G6 from "@antv/g6";
-import type { Graph } from "@antv/g6";
+import type { Graph, ModelConfig, Item } from "@antv/g6";
 import useSetting from "@/hooks/useSetting";
 import useSSPResult from "@/hooks/useSSPResult";
 import elementStyle from "./elementStyle";
@@ -10,14 +10,14 @@ interface IProps {
   name: string;
 }
 
-interface GraphContainerRef {
+export interface GraphContainerRef {
   next: () => void;
   previous: () => void;
-  // TODO: jump: (id: string) => void,
+  jump: (id: number) => void;
 }
 
 const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
-  const { graph, checkEdgeExist } = useRandomGraph();
+  const { graph, matrix, checkEdgeExist } = useRandomGraph();
   const step = useRef<number>(-1);
 
   const [ setting ] = useSetting({
@@ -25,11 +25,13 @@ const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
   });
 
   const { result: operateSequence } = useSSPResult(props.name);
+  const tempElement = useRef<Item | boolean | undefined>(undefined);
 
   useImperativeHandle(ref, () => {
     return {
       next: handleNext,
       previous: handlePrevious,
+      jump: handleJump
     };
   }, []);
 
@@ -96,20 +98,59 @@ const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
 
   }, [graph]);
 
-  const handleHighlight = (id: string, style: any) => {
-    g6.current?.updateItem(id, {
-      style: style
-    });
+  const handleHighlight = (id: string, style: any, allowAdd = true) => {
+    /** element existing in graph */
+    const element = g6.current?.findById(id);
+    if (element) {
+      g6.current?.updateItem(id, {
+        style: style
+      });
+    } else if (allowAdd && matrix) {
+      let model: ModelConfig | undefined = undefined;
+      const type = id.indexOf(":") >= 0 ? "edge" : "node";
+      if (type === "edge") {
+        const source = id.split(":")[0];
+        const target = id.split(":")[1];
+        const value = matrix[parseInt(source)][parseInt(target)];
+        model = {
+          id,
+          source: id.split(":")[0],
+          target: id.split(":")[1],
+          value: value === 0 ? "INF" : value,
+          curveOffset: 80,
+          style: {
+            ...style,
+            endArrow: setting.isDirected ? {
+              path: G6.Arrow.vee(2, 3, 4),
+            }: false,
+          },
+          type: "quadratic"
+        };
+        tempElement.current = g6.current?.addItem(type, model);
+        console.log(tempElement.current);
+      } else if (type === "node") {
+        model = { id, label: id.toString() };
+        tempElement.current = g6.current?.addItem(type, model);
+      }
+    }
   };
 
   const handlePrevious = () => {
-    if (step.current - 1 < 0 || !operateSequence) return;
+    if (step.current - 1 < 0
+      || !operateSequence
+      || step.current > operateSequence.length - 1
+    ) return;
 
+    handleRemoveExtraItem();
     // reset current
     const currentStep = operateSequence[step.current];
-    currentStep.targets.forEach(target => {
-      handleHighlight(target.id, elementStyle[target.role]["default"]);
-    });
+    if (currentStep.type === "reset") {
+      handleReset();
+    } else {
+      currentStep.targets.forEach(target => {
+        handleHighlight(target.id, elementStyle[target.role]["default"], false);
+      });
+    }
 
     // render previous
     const previousStep = operateSequence[step.current - 1];
@@ -129,18 +170,19 @@ const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
 
     if (step.current + 1 >= operateSequence.length) return;
 
+    handleRemoveExtraItem();
     // reset previous
     if (step.current != -1) {
       const previousStep = operateSequence[step.current];
       if (previousStep.type === "settle") {
         previousStep.targets.forEach(target => {
-          handleHighlight(target.id, elementStyle[target.role]["settle"]);
+          handleHighlight(target.id, elementStyle[target.role]["settle"], false);
         });
       } else if (previousStep.type === "reset") {
         handleReset();
       } else {
         previousStep.targets.forEach(target => {
-          handleHighlight(target.id, elementStyle[target.role]["default"]);
+          handleHighlight(target.id, elementStyle[target.role]["default"], false);
         });
       }
     }
@@ -159,12 +201,35 @@ const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
   };
 
   const handleReset = () => {
-      graph?.nodes.forEach(node => {
-        handleHighlight(node.id, elementStyle.node["default"]);
-      });
-      graph?.edges.forEach(edge => {
-        handleHighlight(edge.id, elementStyle.edge["default"]);
-      });
+    handleRemoveExtraItem();
+
+    graph?.nodes.forEach(node => {
+      handleHighlight(node.id, elementStyle.node["default"]);
+    });
+    graph?.edges.forEach(edge => {
+      handleHighlight(edge.id, elementStyle.edge["default"]);
+    });
+  };
+
+  const handleJump = (value: number) => {
+    if (!operateSequence) return;
+    const originStep = step.current;
+    if (value > originStep) {
+      for (let i = Math.min(value, operateSequence.length); i > originStep; i--) {
+        handleNext();
+      }
+    } else if (value < originStep) {
+      for (let i = value; i < Math.min(originStep, operateSequence.length); i++) {
+        handlePrevious();
+      }
+    }
+  };
+
+  const handleRemoveExtraItem = () => {
+    if (tempElement.current) {
+      g6.current?.removeItem((tempElement.current as Item).getID());
+      tempElement.current = undefined;
+    }
   };
 
   return (

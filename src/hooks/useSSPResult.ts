@@ -1,4 +1,5 @@
 import ShortPathService from "@/services/ShortPathAPI";
+import { useMemo } from "react";
 import useSWR from "swr";
 import useRandomGraph from "./useRandomGraph";
 import useSetting from "./useSetting";
@@ -22,8 +23,17 @@ export default function useSSPResult(key?: string) {
     }
   );
 
+  const resultArray = useMemo(() => {
+    if (data) {
+      return Object.entries(data).map(([name, steps]) => ({ name, steps }));
+    } else {
+      return [];
+    }
+  }, [data]);
+
   return {
     result: key? data?.[key]: undefined,
+    resultArray,
     isLoading,
   };
 
