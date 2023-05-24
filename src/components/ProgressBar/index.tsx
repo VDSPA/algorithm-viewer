@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 
 interface IProps {
   max: number;
@@ -15,8 +15,7 @@ const ProgressBar = (props: IProps) => {
   const thumbRef = useRef<HTMLDivElement>(null);
   const stepInDrag = useRef(step);
 
-  const handleStartDrag = (e: MouseEvent) => {
-    e.preventDefault();
+  const handleStartDrag = (e: React.MouseEvent<HTMLDivElement>) => {
     document.addEventListener("mousemove", handleDrag);
     document.addEventListener("mouseup", handleEndDrag);
     if (thumbRef.current) {
@@ -55,10 +54,10 @@ const ProgressBar = (props: IProps) => {
 
   const handleEndDrag = () => {
     document.removeEventListener("mousemove", handleDrag);
-    document.removeEventListener("mouseup", handleEndDrag);
+    // document.removeEventListener("mouseup", handleEndDrag);
   };
 
-  const handleClickBar = (e: MouseEvent) => {
+  const handleClickBar = (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
     if (barRef.current) {
       const newLeft = e.clientX - barRef.current.getBoundingClientRect().left;
