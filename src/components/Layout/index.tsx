@@ -20,7 +20,7 @@ const Layout = (props: IProps) => {
           <div className="i-mdi-alarm text-orange-400" />
         </div>
       </header>
-      <div className="flex-items-center of-auto flex-auto">
+      <div className="flex-items-center of-auto flex-auto pt-1">
         { props.children }
       </div>
     </main>
