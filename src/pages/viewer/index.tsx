@@ -93,19 +93,26 @@ const ViewerPage = () => {
         </div>
         <div className="py-8">
           <div className="flex flex-col gap-4 py-4 px-6 b-rd-2 shadow-default">
-            <ProgressBar max={maxLength} onChange={handleSlide} step={step} />
-            <Divider />
-            <div className="flex gap-2 flex-items-center">
-              <div className="c-primary font-bold b-rd-1 p-l-2">
-                <span> { step } </span> / <span> { maxLength } </span>
-              </div>
-              <div className="flex-auto" />
-              <Button appearance="primary" size="small" onClick={handleClickPlay}>
-                { !isPlay ? "Play" : "Stop" }
-              </Button>
-              <Button appearance="subtle" size="small" onClick={handleClickBack}>Step back</Button>
-              <Button size="small" onClick={handleClickForward}>Step forward</Button>
-            </div>
+            { maxLength > 0 ?
+              <>
+                <ProgressBar max={maxLength} onChange={handleSlide} step={step} />
+                <Divider />
+                <div className="flex gap-2 flex-items-center">
+                  <div className="c-primary font-bold b-rd-1 p-l-2">
+                    <span> { step + 1 } </span> / <span> { maxLength } </span>
+                  </div>
+                  <div className="flex-auto" />
+                  <div className="flex gap-2">
+                    <Button appearance="primary" size="small" onClick={handleClickPlay}>
+                      { !isPlay ? "Play" : "Stop" }
+                    </Button>
+                    <Button appearance="subtle" size="small" onClick={handleClickBack}>Step back</Button>
+                    <Button size="small" onClick={handleClickForward}>Step forward</Button>
+                  </div>
+                </div>
+              </>
+              : <span className="c-primary font-bold b-rd-1">Please create a graph and click RUN ALGORITHMS button.</span>
+            }
           </div>
         </div>
       </section>

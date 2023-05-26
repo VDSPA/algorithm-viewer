@@ -9,7 +9,7 @@ interface IProps {
 
 const ProgressBar = (props: IProps) => {
 
-  const [step, setStep] = useState(props.step || 0);
+  const [step, setStep] = useState(props.step || -1);
   const originMousePosition = useRef(0);
   const barRef = useRef<HTMLDivElement>(null);
   const thumbRef = useRef<HTMLDivElement>(null);
@@ -71,7 +71,10 @@ const ProgressBar = (props: IProps) => {
   };
 
   return (
-    <div className="relative flex-auto flex flex-items-center">
+    <div
+      className="relative flex-auto flex flex-items-center py-1"
+      onMouseDown={handleClickBar}
+    >
       <div className="
         hover:bg-primary-light
         p-[.2rem]
@@ -80,7 +83,7 @@ const ProgressBar = (props: IProps) => {
         b-rd-3
         transition-colors
       "
-      style={{ left: `${step / props.max * 100}%`}}
+      style={{ left: `${(step + 1) / props.max * 100}%`}}
       >
         <div className="b-width-2 bg-primary b-rd-3 w-[.8rem] h-[.8rem]"
           ref={thumbRef}
@@ -90,7 +93,6 @@ const ProgressBar = (props: IProps) => {
       <div
         ref={barRef}
         className="bg-sky-700 h-[.3rem] b-rd-2 flex-auto"
-        onMouseDown={handleClickBar}
       />
     </div>
   );
