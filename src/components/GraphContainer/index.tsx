@@ -230,22 +230,17 @@ const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
   };
 
   return (
-    <div className="b-gray-200 b-solid b-rd-1 flex flex-col">
+    <div className="b-gray-200 flex flex-col b-rd-1 shadow-default">
       <div className="flex-auto">
         <div className="h-[100%]" ref={g6Dom} />
       </div>
-      <div className="px-3 py-2 b-none b-t-1 b-gray200 b-t-solid text-[.9em] flex gap-1">
-        <span>{props.name.toUpperCase()}</span>
+      <div className="px-3 py-2 b-none b-t-1 b-gray200 b-t-solid text-[.9em] flex gap-1 flex-items-center">
+        <span className="font-semibold text-[.9rem]">{props.name.toUpperCase()}</span>
         <span className="flex-auto" />
         { !operateSequence
           ? <span className="b-solid bg-red50 c-red500 b-red500 px-[4px] py-[1px] text-3 b-rd-1">UNREDAY</span>
           : <span className="b-solid bg-green50 c-green500 b-green500 px-[4px] py-[1px] text-3 b-rd-1">REDAY</span>
         }
-      </div>
-      <div className="px-2 py-1 flex gap-1">
-        <button onClick={handleNext}>next</button>
-        <button onClick={handlePrevious}>previous</button>
-        <button onClick={() => console.log(matrix)}>matrix</button>
       </div>
     </div>
   );

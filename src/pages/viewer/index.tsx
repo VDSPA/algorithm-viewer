@@ -1,9 +1,10 @@
 import GraphContainer from "@/components/GraphContainer";
 import ProgressBar from "@/components/ProgressBar";
 import useSSPResult from "@/hooks/useSSPResult";
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { GraphContainerRef } from "@/components/GraphContainer";
 import SettingPanel from "@/components/SettingPanel";
+import { Button } from "@fluentui/react-components";
 
 const algorithms = [
   { name: "bfs" },
@@ -13,7 +14,7 @@ const algorithms = [
 ];
 
 const ViewerPage = () => {
-  const step = useRef<number>(-1);
+  const [step, setStep] = useState(-1);
 
   const graphManager = useRef<{
     name: string,
@@ -39,7 +40,7 @@ const ViewerPage = () => {
 
   const handleSlide = (value: number) => {
     graphManager.current.forEach(item => item.ref?.jump(value));
-    step.current = value;
+    setStep(value);
   };
 
   return (
@@ -50,8 +51,15 @@ const ViewerPage = () => {
             <GraphContainer ref={ref => item.ref = ref} name={item.name} key={item.name}/>
           ))}
         </div>
-        <div className="py-12 px-8">
-          <ProgressBar max={maxLength} onChange={handleSlide} defaultStep={step.current}/>
+        <div className="py-8">
+          <div className="flex flex-col gap-3 py-4 px-6 b-rd-2 shadow-default">
+            <ProgressBar max={maxLength} onChange={handleSlide} defaultStep={step} />
+            <div className="flex gap-2 flex-items-center">
+              <div className="c-primary font-bold b-rd-1 p-l-2">
+                <span> { step } </span> / <span> { maxLength } </span>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
       <section className="flex-none w-72">

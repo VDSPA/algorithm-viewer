@@ -54,7 +54,6 @@ const ProgressBar = (props: IProps) => {
 
   const handleEndDrag = () => {
     document.removeEventListener("mousemove", handleDrag);
-    // document.removeEventListener("mouseup", handleEndDrag);
   };
 
   const handleClickBar = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -68,22 +67,28 @@ const ProgressBar = (props: IProps) => {
   };
 
   return (
-    <section className="relative flex flex-items-center gap-4">
-      <div className={
-        `w-6 h-6 b-rd-6 bg-white b-solid 
-          absolute box-border
-          translate-x-[-.75rem]
-        `}
-        style={{ left: `${step / props.max * 100}%`}}
-        ref={thumbRef}
-        onMouseDown={handleStartDrag}
-      />
+    <div className="relative flex-auto flex flex-items-center">
+      <div className="
+        hover:bg-primary-light
+        p-[.2rem]
+        absolute
+        translate-x-[-.75rem]
+        b-rd-3
+        transition-colors
+      "
+      style={{ left: `${step / props.max * 100}%`}}
+      >
+        <div className="b-width-2 bg-primary b-rd-3 w-[.8rem] h-[.8rem]"
+          ref={thumbRef}
+          onMouseDown={handleStartDrag}
+        />
+      </div>
       <div
         ref={barRef}
-        className="bg-blue h-3 b-rd-2 flex-auto"
+        className="bg-sky-700 h-[.3rem] b-rd-2 flex-auto"
         onMouseDown={handleClickBar}
       />
-    </section>
+    </div>
   );
 };
 
