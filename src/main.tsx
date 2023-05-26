@@ -3,9 +3,10 @@ import ReactDOM from "react-dom/client";
 import App from "./App";
 import "./main.css";
 import "uno.css";
+import { FluentProvider, webLightTheme } from "@fluentui/react-components";
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
-  <React.StrictMode>
+  <FluentProvider theme={webLightTheme}>
     <App />
-  </React.StrictMode>
+  </FluentProvider>
 );

@@ -1,20 +1,12 @@
 import useSWR from "swr";
 import GraphService from "@/services/GraphAPI";
 import convertMatrix2GraphMeta from "@/utils/convertMatrix2GraphMeta";
-import useSetting from "./useSetting";
+import { useState } from "react";
 
 export default function () {
-  const [ setting ] = useSetting();
+  const [loading, setLoading] = useState(false);
 
-  const { isLoading, data, mutate } = useSWR(
-    ["/api/graph", setting],
-    async ([, setting]) => {
-      if (setting) {
-        const res = await GraphService.fetchGraph(setting);
-        return res.data.graph;
-      } else return [];
-    }
-  );
+  const { data, mutate } = useSWR<GraphAPI.Matrix>("/api/graph");
 
   const checkEdgeExist = (id: string) => {
     const [start, end] = id.split(":").map(item => parseInt(item));
@@ -25,15 +17,18 @@ export default function () {
     }
   };
 
-  const refresh = () => {
-    mutate();
+  const fetchNewGraph = async (value: GraphAPI.Setting) => {
+    setLoading(false);
+    const res = await GraphService.fetchGraph(value);
+    mutate(res.data.graph);
+    setLoading(true);
   };
 
   return {
     graph: data ? convertMatrix2GraphMeta(data) : null,
     matrix: data,
-    isLoading,
-    refresh,
+    loading,
+    trigger: fetchNewGraph,
     checkEdgeExist
   };
 }

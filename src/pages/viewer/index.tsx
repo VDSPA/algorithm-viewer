@@ -3,6 +3,7 @@ import ProgressBar from "@/components/ProgressBar";
 import useSSPResult from "@/hooks/useSSPResult";
 import { useMemo, useRef } from "react";
 import type { GraphContainerRef } from "@/components/GraphContainer";
+import SettingPanel from "@/components/SettingPanel";
 
 const algorithms = [
   { name: "bfs" },
@@ -42,15 +43,20 @@ const ViewerPage = () => {
   };
 
   return (
-    <section className="px-8 h[100%] flex flex-col">
-      <div className="flex-auto grid grid-cols-2 grid-rows-2 grid-gap-4">
-        {graphManager.current.map(item => (
-          <GraphContainer ref={ref => item.ref = ref} name={item.name} key={item.name}/>
-        ))}
-      </div>
-      <div className="py-12 px-8">
-        <ProgressBar max={maxLength} onChange={handleSlide} defaultStep={step.current}/>
-      </div>
+    <section className="px-8 h[100%] flex gap-4">
+      <section className="flex-auto flex flex-col">
+        <div className="flex-auto grid grid-cols-2 grid-rows-2 grid-gap-4">
+          {graphManager.current.map(item => (
+            <GraphContainer ref={ref => item.ref = ref} name={item.name} key={item.name}/>
+          ))}
+        </div>
+        <div className="py-12 px-8">
+          <ProgressBar max={maxLength} onChange={handleSlide} defaultStep={step.current}/>
+        </div>
+      </section>
+      <section className="flex-none w-72">
+        <SettingPanel />
+      </section>
     </section>
   );
 };

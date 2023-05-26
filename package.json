@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@antv/g6": "^4.8.8",
+    "@fluentui/react-components": "^9.20.2",
     "@types/lodash-es": "^4.17.7",
     "ahooks": "^3.7.6",
     "lodash-es": "^4.17.21",

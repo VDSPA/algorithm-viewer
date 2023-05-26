@@ -20,9 +20,7 @@ const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
   const { graph, matrix, checkEdgeExist } = useRandomGraph();
   const step = useRef<number>(-1);
 
-  const [ setting ] = useSetting({
-    isDirected: true,
-  });
+  const [ setting ] = useSetting();
 
   const { result: operateSequence } = useSSPResult(props.name);
   const tempElement = useRef<Item | boolean | undefined>(undefined);
@@ -39,7 +37,6 @@ const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
   const g6Dom = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-
     if (!g6.current && graph && g6Dom.current) {
       const g6Graph = {
         nodes: graph.nodes.map(item => ({
@@ -248,6 +245,7 @@ const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
       <div className="px-2 py-1 flex gap-1">
         <button onClick={handleNext}>next</button>
         <button onClick={handlePrevious}>previous</button>
+        <button onClick={() => console.log(matrix)}>matrix</button>
       </div>
     </div>
   );

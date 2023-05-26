@@ -11,6 +11,8 @@ type PropsType = GraphAPI.Setting;
 export default function useSetting(props?: PropsType): ReturnType {
   const initialValue = useRef<GraphAPI.Setting>(props || {
     isDirected: true,
+    start: 0,
+    size: "middle"
   });
 
   const { mutate, data } = useSWR("/store/setting", () => initialValue.current);
