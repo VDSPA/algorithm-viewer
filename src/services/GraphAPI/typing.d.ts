@@ -22,7 +22,9 @@ declare namespace GraphAPI {
   }
 
   interface Setting {
+    size: string;
     isDirected: boolean;
+    start: number;
   }
 
 }

@@ -4,7 +4,7 @@ type CalcShortPathData = {
   settings: GraphAPI.Setting & { matrix: GraphAPI.Matrix };
 }
 
-type CalcShortPathResult = CommonAPI.IResponse<{
+export type CalcShortPathResult = CommonAPI.IResponse<{
   [key: string]: Array<ShortPathAPI.Step>
 }>
 
