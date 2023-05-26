@@ -1,19 +1,23 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 interface IProps {
   max: number;
   onChange?: (value: number) => void;
-  defaultStep?: number;
+  step?: number;
   marks?: number[];
 }
 
 const ProgressBar = (props: IProps) => {
 
-  const [step, setStep] = useState(props.defaultStep || 0);
+  const [step, setStep] = useState(props.step || 0);
   const originMousePosition = useRef(0);
   const barRef = useRef<HTMLDivElement>(null);
   const thumbRef = useRef<HTMLDivElement>(null);
   const stepInDrag = useRef(step);
+
+  useEffect(() => {
+    props.step !== undefined && setStep(props.step);
+  }, [props.step]);
 
   const handleStartDrag = (e: React.MouseEvent<HTMLDivElement>) => {
     document.addEventListener("mousemove", handleDrag);

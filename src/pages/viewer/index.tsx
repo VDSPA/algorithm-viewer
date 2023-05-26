@@ -4,7 +4,7 @@ import useSSPResult from "@/hooks/useSSPResult";
 import { useMemo, useRef, useState } from "react";
 import type { GraphContainerRef } from "@/components/GraphContainer";
 import SettingPanel from "@/components/SettingPanel";
-import { Button } from "@fluentui/react-components";
+import { Button, Divider } from "@fluentui/react-components";
 
 const algorithms = [
   { name: "bfs" },
@@ -15,6 +15,9 @@ const algorithms = [
 
 const ViewerPage = () => {
   const [step, setStep] = useState(-1);
+  const [isPlay, setIsPlay] = useState(false);
+  const timer = useRef<NodeJS.Timer>();
+  const stepRef = useRef(-1);
 
   const graphManager = useRef<{
     name: string,
@@ -40,7 +43,44 @@ const ViewerPage = () => {
 
   const handleSlide = (value: number) => {
     graphManager.current.forEach(item => item.ref?.jump(value));
+    stepRef.current = value;
     setStep(value);
+  };
+
+  const handleClickBack = () => {
+    graphManager.current.forEach(item => item.ref?.previous());
+    if (stepRef.current - 1 >= 0) {
+      stepRef.current--;
+      setStep(stepRef.current);
+      return true;
+    } else false;
+  };
+
+  const handleClickForward = () => {
+    graphManager.current.forEach(item => item.ref?.next());
+    if (stepRef.current + 1 <= maxLength) {
+      stepRef.current++;
+      setStep(stepRef.current);
+      return true;
+    } else false;
+  };
+
+  const handleClickPlay = () => {
+    if (isPlay) {
+      // stop
+      setIsPlay(false);
+      clearInterval(timer.current);
+    } else {
+      // start
+      setIsPlay(true);
+      timer.current = setInterval(() => {
+        const res = handleClickForward();
+        if (!res) {
+          setIsPlay(false);
+          clearInterval(timer.current);
+        }
+      }, 800);
+    }
   };
 
   return (
@@ -52,12 +92,19 @@ const ViewerPage = () => {
           ))}
         </div>
         <div className="py-8">
-          <div className="flex flex-col gap-3 py-4 px-6 b-rd-2 shadow-default">
-            <ProgressBar max={maxLength} onChange={handleSlide} defaultStep={step} />
+          <div className="flex flex-col gap-4 py-4 px-6 b-rd-2 shadow-default">
+            <ProgressBar max={maxLength} onChange={handleSlide} step={step} />
+            <Divider />
             <div className="flex gap-2 flex-items-center">
               <div className="c-primary font-bold b-rd-1 p-l-2">
                 <span> { step } </span> / <span> { maxLength } </span>
               </div>
+              <div className="flex-auto" />
+              <Button appearance="primary" size="small" onClick={handleClickPlay}>
+                { !isPlay ? "Play" : "Stop" }
+              </Button>
+              <Button appearance="subtle" size="small" onClick={handleClickBack}>Step back</Button>
+              <Button size="small" onClick={handleClickForward}>Step forward</Button>
             </div>
           </div>
         </div>
