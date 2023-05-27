@@ -37,7 +37,10 @@ const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
   const g6Dom = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!g6.current && graph && g6Dom.current) {
+    if (g6.current) {
+      g6.current.destroy();
+    }
+    if (graph && g6Dom.current) {
       const g6Graph = {
         nodes: graph.nodes.map(item => ({
           ...item,
