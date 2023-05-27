@@ -84,9 +84,9 @@ const ViewerPage = () => {
   };
 
   return (
-    <section className="px-8 h[100%] flex gap-4">
-      <section className="flex-auto flex flex-col">
-        <div className="flex-auto grid grid-cols-2 grid-rows-2 grid-gap-4">
+    <section className="px-8 h[100%] flex gap-4 flex-justify-center">
+      <section className="flex flex-col">
+        <div className="grid grid-cols-2 grid-rows-2 grid-gap-4">
           {graphManager.current.map(item => (
             <GraphContainer ref={ref => item.ref = ref} name={item.name} key={item.name}/>
           ))}

@@ -5,6 +5,7 @@ import type { Graph, ModelConfig, Item } from "@antv/g6";
 import useSetting from "@/hooks/useSetting";
 import useSSPResult from "@/hooks/useSSPResult";
 import elementStyle from "./elementStyle";
+import { debounce } from "lodash-es";
 
 interface IProps {
   name: string;
@@ -19,6 +20,7 @@ export interface GraphContainerRef {
 const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
   const { graph, matrix, checkEdgeExist } = useRandomGraph();
   const step = useRef<number>(-1);
+  const graphSize = useRef({ width: 0, height: 0 });
 
   const [ setting ] = useSetting();
 
@@ -35,6 +37,20 @@ const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
 
   const g6 = useRef<Graph>();
   const g6Dom = useRef<HTMLDivElement>(null);
+  const wrapperDom = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleResize = debounce(() => {
+      graphSize.current.height = wrapperDom.current?.clientHeight || 0;
+      graphSize.current.width = wrapperDom.current?.clientWidth || 0;
+      g6.current?.changeSize(graphSize.current.width, graphSize.current.height);
+      g6.current?.render();
+    }, 200);
+    addEventListener("resize", handleResize);
+    return () => {
+      removeEventListener("resize", handleResize);
+    };
+  }, []);
 
   useEffect(() => {
     if (g6.current) {
@@ -234,8 +250,8 @@ const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
 
   return (
     <div className="b-gray-200 flex flex-col b-rd-1 shadow-default">
-      <div className="flex-auto">
-        <div className="h-[100%]" ref={g6Dom} />
+      <div className="h-[250px] flex of-hidden aspect-[5/3]" ref={wrapperDom}>
+        <div className="flex-auto" ref={g6Dom} />
       </div>
       <div className="px-3 py-2 b-none b-t-1 b-gray200 b-t-solid text-[.9em] flex gap-1 flex-items-center">
         <span className="font-semibold text-[.9rem]">{props.name.toUpperCase()}</span>
