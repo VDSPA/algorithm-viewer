@@ -5,6 +5,8 @@ import type { Graph, ModelConfig, Item } from "@antv/g6";
 import useSetting from "@/hooks/useSetting";
 import useSSPResult from "@/hooks/useSSPResult";
 import elementStyle from "./elementStyle";
+import { debounce } from "lodash-es";
+import { Button, Tooltip } from "@fluentui/react-components";
 
 interface IProps {
   name: string;
@@ -19,6 +21,7 @@ export interface GraphContainerRef {
 const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
   const { graph, matrix, checkEdgeExist } = useRandomGraph();
   const step = useRef<number>(-1);
+  const graphSize = useRef({ width: 0, height: 0 });
 
   const [ setting ] = useSetting();
 
@@ -35,18 +38,32 @@ const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
 
   const g6 = useRef<Graph>();
   const g6Dom = useRef<HTMLDivElement>(null);
+  const wrapperDom = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!g6.current && graph && g6Dom.current) {
+    const handleResize = debounce(() => {
+      graphSize.current.height = wrapperDom.current?.clientHeight || 0;
+      graphSize.current.width = wrapperDom.current?.clientWidth || 0;
+      g6.current?.changeSize(graphSize.current.width, graphSize.current.height);
+      g6.current?.render();
+    }, 200);
+    addEventListener("resize", handleResize);
+    return () => {
+      removeEventListener("resize", handleResize);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (g6.current) {
+      g6.current.destroy();
+    }
+    if (graph && g6Dom.current) {
       const g6Graph = {
         nodes: graph.nodes.map(item => ({
           ...item,
           size: 10,
           labelCfg: {
-            style: {
-              fontSize: 6,
-              fontFamily: "monospace"
-            }
+            style: { fontSize: 6, fontFamily: "monospace" }
           }
         })),
         edges: graph.edges.map(item => ({
@@ -59,10 +76,7 @@ const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
           },
           type: checkEdgeExist([...item.id.split(":")].reverse().join(":"))? "quadratic": "line",
           labelCfg: {
-            style: {
-              fontSize: 6,
-              fontFamily: "monospace"
-            }
+            style: { fontSize: 6, fontFamily: "monospace" }
           }
         }))
       };
@@ -70,22 +84,15 @@ const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
       g6.current = new G6.Graph({
         container: g6Dom.current,
         fitView: true,
-        layout: {
-          type: "mds",
-        },
-        modes: {
-          default: ["drag-node"]
-        },
+        layout: { type: "mds", },
+        modes: { default: ["drag-node"] },
         defaultNode: {
           size: 20,
           style: elementStyle.node.default
         },
         defaultEdge: {
           curveOffset: 80,
-          style: {
-            ...elementStyle.edge.default,
-            opacity: .4
-          }
+          style: { ...elementStyle.edge.default, opacity: .4 }
         }
       });
 
@@ -133,10 +140,15 @@ const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
   };
 
   const handlePrevious = () => {
-    if (step.current - 1 < 0
+    if (step.current - 1 < -1
       || !operateSequence
       || step.current > operateSequence.length - 1
     ) return;
+
+    if (step.current - 1 === -1) {
+      handleReset();
+      return;
+    }
 
     handleRemoveExtraItem();
     // reset current
@@ -229,18 +241,38 @@ const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
     }
   };
 
+  const handleCopyResult = () => {
+    const text = JSON.stringify(operateSequence);
+    navigator.clipboard.writeText(text);
+  };
+
   return (
     <div className="b-gray-200 flex flex-col b-rd-1 shadow-default">
-      <div className="flex-auto">
-        <div className="h-[100%]" ref={g6Dom} />
+      <div className="h-[250px] flex of-hidden aspect-[5/3]" ref={wrapperDom}>
+        <div className="flex-auto" ref={g6Dom} />
       </div>
       <div className="px-3 py-2 b-none b-t-1 b-gray200 b-t-solid text-[.9em] flex gap-1 flex-items-center">
         <span className="font-semibold text-[.9rem]">{props.name.toUpperCase()}</span>
         <span className="flex-auto" />
-        { !operateSequence
-          ? <span className="b-solid bg-red50 c-red500 b-red500 px-[4px] py-[1px] text-3 b-rd-1">UNREDAY</span>
-          : <span className="b-solid bg-green50 c-green500 b-green500 px-[4px] py-[1px] text-3 b-rd-1">REDAY</span>
-        }
+        <div className="flex gap-2">
+          { operateSequence
+            && <Tooltip
+                content={`Copy ${props.name} running steps`}
+                relationship="description"
+                >
+                <Button
+                  size="small"
+                  appearance="transparent"
+                  icon={<div className="i-fluent-mdl2-copy text-[.8rem]" />}
+                  onClick={handleCopyResult}
+                />
+              </Tooltip>
+          }
+          { !operateSequence
+            ? <span className="bg-red50 c-red500 px-[6px] py-[1px] text-3 b-rd-1 font-medium ">UNREDAY</span>
+            : <span className="bg-green50 c-green500 px-[6px] py-[1px] text-3 b-rd-1 font-medium">REDAY</span>
+          }
+        </div>
       </div>
     </div>
   );

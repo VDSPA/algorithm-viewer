@@ -1,14 +1,8 @@
 import { Field, Select, Checkbox, Button, SelectOnChangeData, CheckboxOnChangeData } from "@fluentui/react-components";
 import useRandomGraph from "@/hooks/useRandomGraph";
-import { useContext, useRef } from "react";
+import { useContext } from "react";
 import useSetting from "@/hooks/useSetting";
-import { useSWRConfig } from "swr";
 import SettingFormContext from "./SettingFormContext";
-
-interface FormData {
-  size: string;
-  isDirected: boolean;
-}
 
 const GraphSetting = () => {
   const { trigger } = useRandomGraph();

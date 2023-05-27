@@ -6,7 +6,7 @@ import SettingFormContext from "./SettingFormContext";
 
 const SettingPanel = () => {
   const formData = useRef<GraphAPI.Setting>({
-    size: "large",
+    size: "small",
     isDirected: false,
     start: 0
   });

@@ -14,8 +14,12 @@ const AlgorithmSetting = () => {
     formData && (formData.current.start = parseInt(value.value));
   };
 
+  const handleViewMatrix = () => {
+    const text = JSON.stringify(matrix);
+    navigator.clipboard.writeText(text);
+  };
+
   const handleRun = () => {
-    // console.log(formData?.current);
     if (formData && matrix) {
       trigger(formData?.current, matrix);
     }
@@ -24,14 +28,26 @@ const AlgorithmSetting = () => {
   return (
     <>
       <Field label="Select a start pot">
-        <Select disabled={ matrix === undefined} onChange={handleSelectStartPot}>
+        <Select disabled={matrix === undefined} onChange={handleSelectStartPot}>
           { matrix?.map((_, index)  =>
             <option key={index} value={index}>{index}</option>
           )}
         </Select>
       </Field>
 
-      <Button appearance="primary" onClick={handleRun}>Run algorithms</Button>
+      <Button
+        appearance="primary"
+        disabled={matrix === undefined}
+        onClick={handleRun}
+      >Run algorithms</Button>
+
+      <Button
+        appearance="transparent"
+        size="small"
+        disabled={matrix === undefined}
+        onClick={handleViewMatrix}
+        icon={<div className="i-fluent-mdl2-copy text-3" />}
+      >Copy Matrix Data</Button>
     </>
   );
 };

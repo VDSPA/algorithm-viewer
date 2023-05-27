@@ -9,7 +9,7 @@ interface IProps {
 
 const ProgressBar = (props: IProps) => {
 
-  const [step, setStep] = useState(props.step || -1);
+  const [step, setStep] = useState(props.step || 0);
   const originMousePosition = useRef(0);
   const barRef = useRef<HTMLDivElement>(null);
   const thumbRef = useRef<HTMLDivElement>(null);
@@ -83,7 +83,7 @@ const ProgressBar = (props: IProps) => {
         b-rd-3
         transition-colors
       "
-      style={{ left: `${(step + 1) / props.max * 100}%`}}
+      style={{ left: `${(step) / props.max * 100}%`}}
       >
         <div className="b-width-2 bg-primary b-rd-3 w-[.8rem] h-[.8rem]"
           ref={thumbRef}
