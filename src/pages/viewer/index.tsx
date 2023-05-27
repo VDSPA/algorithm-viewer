@@ -42,14 +42,14 @@ const ViewerPage = () => {
   }, [resultArray]);
 
   const handleSlide = (value: number) => {
-    graphManager.current.forEach(item => item.ref?.jump(value));
-    stepRef.current = value;
-    setStep(value);
+    stepRef.current = value - 1;
+    graphManager.current.forEach(item => item.ref?.jump(stepRef.current));
+    setStep(stepRef.current);
   };
 
   const handleClickBack = () => {
     graphManager.current.forEach(item => item.ref?.previous());
-    if (stepRef.current - 1 >= 0) {
+    if (stepRef.current - 1 > -2) {
       stepRef.current--;
       setStep(stepRef.current);
       return true;
@@ -95,7 +95,7 @@ const ViewerPage = () => {
           <div className="flex flex-col gap-4 py-4 px-6 b-rd-2 shadow-default">
             { maxLength > 0 ?
               <>
-                <ProgressBar max={maxLength} onChange={handleSlide} step={step} />
+                <ProgressBar max={maxLength} onChange={handleSlide} step={step + 1} />
                 <Divider />
                 <div className="flex gap-2 flex-items-center">
                   <div className="c-primary font-bold b-rd-1 p-l-2">
@@ -104,7 +104,7 @@ const ViewerPage = () => {
                   <div className="flex-auto" />
                   <div className="flex gap-2">
                     <Button appearance="primary" size="small" onClick={handleClickPlay}>
-                      { !isPlay ? "Play" : "Stop" }
+                      { !isPlay ? "Play" : "Pause" }
                     </Button>
                     <Button appearance="subtle" size="small" onClick={handleClickBack}>Step back</Button>
                     <Button size="small" onClick={handleClickForward}>Step forward</Button>

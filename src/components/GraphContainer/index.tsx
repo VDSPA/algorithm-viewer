@@ -152,10 +152,15 @@ const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
   };
 
   const handlePrevious = () => {
-    if (step.current - 1 < 0
+    if (step.current - 1 < -1
       || !operateSequence
       || step.current > operateSequence.length - 1
     ) return;
+
+    if (step.current - 1 === -1) {
+      handleReset();
+      return;
+    }
 
     handleRemoveExtraItem();
     // reset current
