@@ -48,7 +48,10 @@ const ViewerPage = () => {
   };
 
   const handleClickBack = () => {
-    graphManager.current.forEach(item => item.ref?.previous());
+    graphManager.current.forEach((item, index) => {
+      if (stepRef.current < resultArray[index].steps.length)
+        item.ref?.previous();
+    });
     if (stepRef.current - 1 > -2) {
       stepRef.current--;
       setStep(stepRef.current);
