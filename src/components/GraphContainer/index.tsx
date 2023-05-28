@@ -1,5 +1,5 @@
 import useRandomGraph from "@/hooks/useRandomGraph";
-import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import G6 from "@antv/g6";
 import type { Graph, ModelConfig, Item } from "@antv/g6";
 import useSetting from "@/hooks/useSetting";
@@ -21,6 +21,7 @@ export interface GraphContainerRef {
 const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
   const { graph, matrix, checkEdgeExist } = useRandomGraph();
   const step = useRef<number>(-1);
+  const [stepCount, setStepCount] = useState(-1);
   const graphSize = useRef({ width: 0, height: 0 });
 
   const [ setting ] = useSetting();
@@ -147,6 +148,8 @@ const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
 
     if (step.current - 1 === -1) {
       handleReset();
+      step.current--;
+      setStepCount(step.current);
       return;
     }
 
@@ -172,6 +175,7 @@ const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
       });
     }
     step.current--;
+    setStepCount(step.current);
   };
 
   const handleNext = () => {
@@ -207,6 +211,7 @@ const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
       });
     }
     step.current++;
+    setStepCount(step.current);
   };
 
   const handleReset = () => {
@@ -255,22 +260,27 @@ const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
         <span className="font-semibold text-[.9rem]">{props.name.toUpperCase()}</span>
         <span className="flex-auto" />
         <div className="flex gap-2">
+          { !operateSequence
+            ? <span className="bg-red50 c-red500 px-[6px] py-[1px] text-3 b-rd-1 font-medium ">UNREDAY</span>
+            : <span className={`
+                ${stepCount + 1 < operateSequence.length
+                ? "bg-yellow50 c-yellow500"
+                : "bg-green50 c-green500"
+                } px-[6px] py-[1px] text-3 b-rd-1 font-medium`}
+              > {stepCount + 1} / {operateSequence?.length}</span>
+          }
           { operateSequence
             && <Tooltip
                 content={`Copy ${props.name} running steps`}
                 relationship="description"
                 >
-                <Button
-                  size="small"
-                  appearance="transparent"
-                  icon={<div className="i-fluent-mdl2-copy text-[.8rem]" />}
-                  onClick={handleCopyResult}
-                />
+                  <Button
+                    size="small"
+                    appearance="transparent"
+                    icon={<div className="i-fluent-mdl2-copy text-[.8rem]" />}
+                    onClick={handleCopyResult}
+                  />
               </Tooltip>
-          }
-          { !operateSequence
-            ? <span className="bg-red50 c-red500 px-[6px] py-[1px] text-3 b-rd-1 font-medium ">UNREDAY</span>
-            : <span className="bg-green50 c-green500 px-[6px] py-[1px] text-3 b-rd-1 font-medium">REDAY</span>
           }
         </div>
       </div>

@@ -48,7 +48,10 @@ const ViewerPage = () => {
   };
 
   const handleClickBack = () => {
-    graphManager.current.forEach(item => item.ref?.previous());
+    graphManager.current.forEach((item, index) => {
+      if (stepRef.current < resultArray[index].steps.length)
+        item.ref?.previous();
+    });
     if (stepRef.current - 1 > -2) {
       stepRef.current--;
       setStep(stepRef.current);
@@ -95,7 +98,13 @@ const ViewerPage = () => {
           <div className="flex flex-col gap-4 py-4 px-6 b-rd-2 shadow-default">
             { maxLength > 0 ?
               <>
-                <ProgressBar max={maxLength} onChange={handleSlide} step={step + 1} />
+                <ProgressBar
+                  max={maxLength}
+                  onChange={handleSlide} step={step + 1}
+                  marks={resultArray.map(item =>
+                    ({ label: `${item.name} end`, value: item.steps.length }))
+                  }
+                />
                 <Divider />
                 <div className="flex gap-2 flex-items-center">
                   <div className="c-primary font-bold b-rd-1 p-l-2">

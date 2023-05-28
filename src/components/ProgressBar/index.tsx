@@ -1,10 +1,11 @@
+import { Tooltip } from "@fluentui/react-components";
 import React, { useEffect, useRef, useState } from "react";
 
 interface IProps {
   max: number;
   onChange?: (value: number) => void;
   step?: number;
-  marks?: number[];
+  marks?: Array<{ label?: string; value: number }>
 }
 
 const ProgressBar = (props: IProps) => {
@@ -70,30 +71,51 @@ const ProgressBar = (props: IProps) => {
     document.addEventListener("mouseup", handleEndDrag);
   };
 
+  const handleClickSplitPoint = (step: number) => {
+    setStep(step);
+    props.onChange?.(step);
+  };
+
   return (
-    <div
-      className="relative flex-auto flex flex-items-center py-1"
-      onMouseDown={handleClickBar}
-    >
-      <div className="
-        hover:bg-primary-light
-        p-[.2rem]
-        absolute
-        translate-x-[-.75rem]
-        b-rd-3
-        transition-colors
-      "
-      style={{ left: `${(step) / props.max * 100}%`}}
+    <div className="relative flex flex-items-center">
+      <div
+        className="relative flex-auto flex flex-items-center py-1"
+        onMouseDown={handleClickBar}
       >
-        <div className="b-width-2 bg-primary b-rd-3 w-[.8rem] h-[.8rem]"
-          ref={thumbRef}
-          onMouseDown={handleStartDrag}
+        <div className="
+          hover:bg-primary-light
+          p-[.2rem]
+          absolute
+          translate-x-[-50%]
+          b-rd-3
+          transition-colors
+          z-3
+        "
+        style={{ left: `${(step) / props.max * 100}%`}}
+        >
+          <div className="b-width-2 bg-primary b-rd-3 w-[.8rem] h-[.8rem]"
+            ref={thumbRef}
+            onMouseDown={handleStartDrag}
+          />
+        </div>
+        <div
+          ref={barRef}
+          className="bg-sky-700 h-[.3rem] b-rd-2 flex-auto z-1"
         />
       </div>
-      <div
-        ref={barRef}
-        className="bg-sky-700 h-[.3rem] b-rd-2 flex-auto"
-      />
+      { props.marks?.map(item => (
+        <Tooltip
+          key={item.value}
+          content={item.label || item.value.toString()}
+          withArrow relationship="description"
+        >
+          <div
+            className="absolute translate-x-[-50%] w-[.1rem] h-[.3rem] bg-white hover:w-1 transition-all z-2 cursor-pointer"
+            style={{ left: `${(item.value) / props.max * 100}%`}}
+            onClick={() => handleClickSplitPoint(item.value)}
+          />
+        </Tooltip>
+      ))}
     </div>
   );
 };
