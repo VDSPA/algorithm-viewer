@@ -147,6 +147,7 @@ const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
 
     if (step.current - 1 === -1) {
       handleReset();
+      step.current--;
       return;
     }
 
