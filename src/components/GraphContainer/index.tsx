@@ -1,7 +1,7 @@
 import useRandomGraph from "@/hooks/useRandomGraph";
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import G6 from "@antv/g6";
-import type { Graph, ModelConfig, Item } from "@antv/g6";
+import type { Graph, Item } from "@antv/g6";
 import useSetting from "@/hooks/useSetting";
 import useSSPResult from "@/hooks/useSSPResult";
 import elementStyle from "./elementStyle";
@@ -26,7 +26,7 @@ export interface GraphContainerRef {
 }
 
 const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
-  const { graph, matrix, checkEdgeExist } = useRandomGraph();
+  const { graph, checkEdgeExist } = useRandomGraph();
   const step = useRef<number>(-1);
   const [stepCount, setStepCount] = useState(-1);
   const graphSize = useRef({ width: 0, height: 0 });
@@ -34,7 +34,6 @@ const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
   const [ setting ] = useSetting();
 
   const { result: operateSequence } = useSSPResult(props.name);
-  const tempElement = useRef<Item | boolean | undefined>(undefined);
   const elementSettleState = useRef<ElementState>({});
 
   useImperativeHandle(ref, () => {
@@ -113,41 +112,10 @@ const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
 
   }, [graph]);
 
-  const handleHighlight = (id: string, style: any, allowAdd = true) => {
+  const handleHighlight = (id: string, style: any) => {
     /** element existing in graph */
     const element = g6.current?.findById(id);
-    if (element) {
-      g6.current?.updateItem(id, {
-        style: style
-      });
-    } else if (allowAdd && matrix) {
-      let model: ModelConfig | undefined = undefined;
-      const type = id.indexOf(":") >= 0 ? "edge" : "node";
-      if (type === "edge") {
-        const source = id.split(":")[0];
-        const target = id.split(":")[1];
-        const value = matrix[parseInt(source)][parseInt(target)];
-        model = {
-          id,
-          source: id.split(":")[0],
-          target: id.split(":")[1],
-          value: value === 0 ? "INF" : value,
-          curveOffset: 80,
-          style: {
-            ...style,
-            endArrow: setting.isDirected ? {
-              path: G6.Arrow.vee(2, 3, 4),
-            }: false,
-          },
-          type: "quadratic"
-        };
-        tempElement.current = g6.current?.addItem(type, model);
-        console.log(tempElement.current);
-      } else if (type === "node") {
-        model = { id, label: id.toString() };
-        tempElement.current = g6.current?.addItem(type, model);
-      }
-    }
+    element && g6.current?.updateItem(id, { style: style });
   };
 
   const handlePrevious = () => {
@@ -163,20 +131,18 @@ const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
       return;
     }
 
-    handleRemoveExtraItem();
     // reset current
     const currentStep = operateSequence[step.current];
     if (currentStep.type === "reset") {
       handleReset();
     } else {
-      // FIXME: traverse -> settle
       currentStep.targets.forEach(target => {
         elementSettleState.current[target.id].pop();
         const isRenderInPrevious = operateSequence[step.current - 1].targets.find(item => item.id === target.id) ? true : false;
         if (!isRenderInPrevious && elementSettleState.current[target.id].slice(-1)[0].state !== "settle") {
-          handleHighlight(target.id, elementStyle[target.role]["default"], false);
+          handleHighlight(target.id, elementStyle[target.role]["default"]);
         } else if (!isRenderInPrevious) {
-          handleHighlight(target.id, elementStyle[target.role]["settle"], false);
+          handleHighlight(target.id, elementStyle[target.role]["settle"]);
         }
       });
     }
@@ -205,32 +171,29 @@ const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
 
     if (step.current + 1 >= operateSequence.length) return;
 
-    handleRemoveExtraItem();
-
     // reset current
     // depends on element self state
     if (step.current != -1) {
-      const previousStep = operateSequence[step.current];
-      if (previousStep.type === "reset") {
+      const currentStep = operateSequence[step.current];
+      if (currentStep.type === "reset") {
         handleReset();
       } else {
-        previousStep.targets.forEach(target => {
+        currentStep.targets.forEach(target => {
           const isRenderInNext = operateSequence[step.current + 1].targets.find(item => item.id === target.id) ? true : false;
           if (!isRenderInNext && elementSettleState.current[target.id].slice(-1)[0].state !== "settle") {
-            handleHighlight(target.id, elementStyle[target.role]["default"], false);
+            handleHighlight(target.id, elementStyle[target.role]["default"]);
           }
         });
       }
     }
 
     // render next
-    const currentStep = operateSequence[step.current + 1];
-    if (currentStep.type === "reset") {
+    const nextStep = operateSequence[step.current + 1];
+    if (nextStep.type === "reset") {
       handleReset();
     } else {
-      const type = currentStep.type;
-      currentStep.targets.forEach(target => {
-        // type === "settle" && (elementSettleState.current[target.id] = true);
+      const type = nextStep.type;
+      nextStep.targets.forEach(target => {
         if (elementSettleState.current[target.id] === undefined)
           elementSettleState.current[target.id] = [];
         elementSettleState.current[target.id].push({ state: type, step: step.current + 1});
@@ -242,7 +205,6 @@ const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
   };
 
   const handleReset = () => {
-    handleRemoveExtraItem();
     elementSettleState.current = {};
 
     graph?.nodes.forEach(node => {
@@ -266,13 +228,6 @@ const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
       for (let i = value; i < Math.min(originStep, operateSequence.length); i++) {
         handlePrevious();
       }
-    }
-  };
-
-  const handleRemoveExtraItem = () => {
-    if (tempElement.current) {
-      g6.current?.removeItem((tempElement.current as Item).getID());
-      tempElement.current = undefined;
     }
   };
 
