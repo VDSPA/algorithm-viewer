@@ -12,6 +12,13 @@ interface IProps {
   name: string;
 }
 
+interface ElementState {
+  [key: string]: Array<{
+    state: "settle" | "traverse" | "default";
+    step: number;
+  }>
+}
+
 export interface GraphContainerRef {
   next: () => void;
   previous: () => void;
@@ -28,6 +35,7 @@ const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
 
   const { result: operateSequence } = useSSPResult(props.name);
   const tempElement = useRef<Item | boolean | undefined>(undefined);
+  const elementSettleState = useRef<ElementState>({});
 
   useImperativeHandle(ref, () => {
     return {
@@ -40,6 +48,10 @@ const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
   const g6 = useRef<Graph>();
   const g6Dom = useRef<HTMLDivElement>(null);
   const wrapperDom = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    handleReset();
+  }, [graph]);
 
   useEffect(() => {
     const handleResize = debounce(() => {
@@ -55,9 +67,7 @@ const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
   }, []);
 
   useEffect(() => {
-    if (g6.current) {
-      g6.current.destroy();
-    }
+    g6.current && g6.current.destroy();
     if (graph && g6Dom.current) {
       const g6Graph = {
         nodes: graph.nodes.map(item => ({
@@ -159,8 +169,15 @@ const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
     if (currentStep.type === "reset") {
       handleReset();
     } else {
+      // FIXME: traverse -> settle
       currentStep.targets.forEach(target => {
-        handleHighlight(target.id, elementStyle[target.role]["default"], false);
+        elementSettleState.current[target.id].pop();
+        const isRenderInPrevious = operateSequence[step.current - 1].targets.find(item => item.id === target.id) ? true : false;
+        if (!isRenderInPrevious && elementSettleState.current[target.id].slice(-1)[0].state !== "settle") {
+          handleHighlight(target.id, elementStyle[target.role]["default"], false);
+        } else if (!isRenderInPrevious) {
+          handleHighlight(target.id, elementStyle[target.role]["settle"], false);
+        }
       });
     }
 
@@ -171,6 +188,11 @@ const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
     } else {
       const type = previousStep.type;
       previousStep.targets.forEach(target => {
+        if (elementSettleState.current[target.id] === undefined)
+          elementSettleState.current[target.id] = [];
+        if (elementSettleState.current[target.id].slice(-1)[0].state !== "settle") {
+          elementSettleState.current[target.id].push({ state: type, step: step.current + 1});
+        }
         handleHighlight(target.id, elementStyle[target.role][type]);
       });
     }
@@ -184,29 +206,34 @@ const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
     if (step.current + 1 >= operateSequence.length) return;
 
     handleRemoveExtraItem();
-    // reset previous
+
+    // reset current
+    // depends on element self state
     if (step.current != -1) {
       const previousStep = operateSequence[step.current];
-      if (previousStep.type === "settle") {
-        previousStep.targets.forEach(target => {
-          handleHighlight(target.id, elementStyle[target.role]["settle"], false);
-        });
-      } else if (previousStep.type === "reset") {
+      if (previousStep.type === "reset") {
         handleReset();
       } else {
         previousStep.targets.forEach(target => {
-          handleHighlight(target.id, elementStyle[target.role]["default"], false);
+          const isRenderInNext = operateSequence[step.current + 1].targets.find(item => item.id === target.id) ? true : false;
+          if (!isRenderInNext && elementSettleState.current[target.id].slice(-1)[0].state !== "settle") {
+            handleHighlight(target.id, elementStyle[target.role]["default"], false);
+          }
         });
       }
     }
 
-    // render current
+    // render next
     const currentStep = operateSequence[step.current + 1];
     if (currentStep.type === "reset") {
       handleReset();
     } else {
       const type = currentStep.type;
       currentStep.targets.forEach(target => {
+        // type === "settle" && (elementSettleState.current[target.id] = true);
+        if (elementSettleState.current[target.id] === undefined)
+          elementSettleState.current[target.id] = [];
+        elementSettleState.current[target.id].push({ state: type, step: step.current + 1});
         handleHighlight(target.id, elementStyle[target.role][type]);
       });
     }
@@ -216,12 +243,15 @@ const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
 
   const handleReset = () => {
     handleRemoveExtraItem();
+    elementSettleState.current = {};
 
     graph?.nodes.forEach(node => {
       handleHighlight(node.id, elementStyle.node["default"]);
+      elementSettleState.current[node.id] = [{ state: "default", step: -1 }];
     });
     graph?.edges.forEach(edge => {
       handleHighlight(edge.id, elementStyle.edge["default"]);
+      elementSettleState.current[edge.id] = [{ state: "default", step: -1 }];
     });
   };
 
