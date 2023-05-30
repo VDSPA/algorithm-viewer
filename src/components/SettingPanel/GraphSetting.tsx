@@ -1,6 +1,6 @@
 import { Field, Select, Checkbox, Button, SelectOnChangeData, CheckboxOnChangeData } from "@fluentui/react-components";
 import useRandomGraph from "@/hooks/useRandomGraph";
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import useSetting from "@/hooks/useSetting";
 import SettingFormContext from "./SettingFormContext";
 
@@ -26,6 +26,20 @@ const GraphSetting = () => {
       trigger(formData.current);
     }
   };
+
+  const handleKeyboardEvent = (e: KeyboardEvent) => {
+    if (e.code === "KeyN" && e.ctrlKey) {
+      handleClickNewGraph();
+    }
+  };
+
+  useEffect(() => {
+    addEventListener("keydown", handleKeyboardEvent);
+
+    return () => {
+      removeEventListener("keydown", handleKeyboardEvent);
+    };
+  }, []);
 
   return (
     <>

@@ -1,7 +1,7 @@
 import useRandomGraph from "@/hooks/useRandomGraph";
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import G6 from "@antv/g6";
-import type { Graph, ModelConfig, Item } from "@antv/g6";
+import type { Graph } from "@antv/g6";
 import useSetting from "@/hooks/useSetting";
 import useSSPResult from "@/hooks/useSSPResult";
 import elementStyle from "./elementStyle";
@@ -12,6 +12,13 @@ interface IProps {
   name: string;
 }
 
+interface ElementState {
+  [key: string]: Array<{
+    state: "settle" | "traverse" | "default";
+    step: number;
+  }>
+}
+
 export interface GraphContainerRef {
   next: () => void;
   previous: () => void;
@@ -19,7 +26,7 @@ export interface GraphContainerRef {
 }
 
 const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
-  const { graph, matrix, checkEdgeExist } = useRandomGraph();
+  const { graph, checkEdgeExist } = useRandomGraph();
   const step = useRef<number>(-1);
   const [stepCount, setStepCount] = useState(-1);
   const graphSize = useRef({ width: 0, height: 0 });
@@ -27,7 +34,7 @@ const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
   const [ setting ] = useSetting();
 
   const { result: operateSequence } = useSSPResult(props.name);
-  const tempElement = useRef<Item | boolean | undefined>(undefined);
+  const elementSettleState = useRef<ElementState>({});
 
   useImperativeHandle(ref, () => {
     return {
@@ -40,6 +47,10 @@ const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
   const g6 = useRef<Graph>();
   const g6Dom = useRef<HTMLDivElement>(null);
   const wrapperDom = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    handleReset();
+  }, [graph]);
 
   useEffect(() => {
     const handleResize = debounce(() => {
@@ -55,9 +66,7 @@ const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
   }, []);
 
   useEffect(() => {
-    if (g6.current) {
-      g6.current.destroy();
-    }
+    g6.current && g6.current.destroy();
     if (graph && g6Dom.current) {
       const g6Graph = {
         nodes: graph.nodes.map(item => ({
@@ -103,41 +112,10 @@ const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
 
   }, [graph]);
 
-  const handleHighlight = (id: string, style: any, allowAdd = true) => {
+  const handleHighlight = (id: string, style: any) => {
     /** element existing in graph */
     const element = g6.current?.findById(id);
-    if (element) {
-      g6.current?.updateItem(id, {
-        style: style
-      });
-    } else if (allowAdd && matrix) {
-      let model: ModelConfig | undefined = undefined;
-      const type = id.indexOf(":") >= 0 ? "edge" : "node";
-      if (type === "edge") {
-        const source = id.split(":")[0];
-        const target = id.split(":")[1];
-        const value = matrix[parseInt(source)][parseInt(target)];
-        model = {
-          id,
-          source: id.split(":")[0],
-          target: id.split(":")[1],
-          value: value === 0 ? "INF" : value,
-          curveOffset: 80,
-          style: {
-            ...style,
-            endArrow: setting.isDirected ? {
-              path: G6.Arrow.vee(2, 3, 4),
-            }: false,
-          },
-          type: "quadratic"
-        };
-        tempElement.current = g6.current?.addItem(type, model);
-        console.log(tempElement.current);
-      } else if (type === "node") {
-        model = { id, label: id.toString() };
-        tempElement.current = g6.current?.addItem(type, model);
-      }
-    }
+    element && g6.current?.updateItem(id, { style: style });
   };
 
   const handlePrevious = () => {
@@ -153,14 +131,25 @@ const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
       return;
     }
 
-    handleRemoveExtraItem();
     // reset current
     const currentStep = operateSequence[step.current];
     if (currentStep.type === "reset") {
       handleReset();
+    } else if (currentStep.type === "finish") {
+      Object.keys(elementSettleState.current).forEach(id => {
+        if (elementSettleState.current[id].slice(-1)[0].step === step.current) {
+          elementSettleState.current[id].pop();
+        }
+      });
     } else {
       currentStep.targets.forEach(target => {
-        handleHighlight(target.id, elementStyle[target.role]["default"], false);
+        elementSettleState.current[target.id].pop();
+        const isRenderInPrevious = operateSequence[step.current - 1].targets.find(item => item.id === target.id) ? true : false;
+        if (!isRenderInPrevious && elementSettleState.current[target.id].slice(-1)[0].state !== "settle") {
+          handleHighlight(target.id, elementStyle[target.role]["default"]);
+        } else if (!isRenderInPrevious) {
+          handleHighlight(target.id, elementStyle[target.role]["settle"]);
+        }
       });
     }
 
@@ -168,9 +157,14 @@ const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
     const previousStep = operateSequence[step.current - 1];
     if (previousStep.type === "reset") {
       handleReset();
-    } else {
+    } else if (previousStep.type !== "finish") {
       const type = previousStep.type;
       previousStep.targets.forEach(target => {
+        if (elementSettleState.current[target.id] === undefined)
+          elementSettleState.current[target.id] = [];
+        if (elementSettleState.current[target.id].slice(-1)[0].state !== "settle") {
+          elementSettleState.current[target.id].push({ state: type, step: step.current + 1});
+        }
         handleHighlight(target.id, elementStyle[target.role][type]);
       });
     }
@@ -183,30 +177,41 @@ const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
 
     if (step.current + 1 >= operateSequence.length) return;
 
-    handleRemoveExtraItem();
-    // reset previous
-    if (step.current != -1) {
-      const previousStep = operateSequence[step.current];
-      if (previousStep.type === "settle") {
-        previousStep.targets.forEach(target => {
-          handleHighlight(target.id, elementStyle[target.role]["settle"], false);
-        });
-      } else if (previousStep.type === "reset") {
+    // reset current
+    // depends on element self state
+    if (step.current !== -1) {
+      const currentStep = operateSequence[step.current];
+      if (currentStep.type === "reset") {
         handleReset();
       } else {
-        previousStep.targets.forEach(target => {
-          handleHighlight(target.id, elementStyle[target.role]["default"], false);
+        currentStep.targets.forEach(target => {
+          const isRenderInNext = operateSequence[step.current + 1].targets.find(item => item.id === target.id) ? true : false;
+          if (!isRenderInNext && elementSettleState.current[target.id].slice(-1)[0].state !== "settle") {
+            handleHighlight(target.id, elementStyle[target.role]["default"]);
+          }
         });
       }
     }
 
-    // render current
-    const currentStep = operateSequence[step.current + 1];
-    if (currentStep.type === "reset") {
+    // render next
+    const nextStep = operateSequence[step.current + 1];
+    if (nextStep.type === "reset") {
       handleReset();
+    } else if (nextStep.type === "finish") {
+      Object.keys(elementSettleState.current).forEach(id => {
+        const target = elementSettleState.current[id];
+        if (target.slice(-1)[0].state === "traverse" && target.slice(-1)[0].step === step.current) {
+          // view finish as settle for a element
+          elementSettleState.current[id].push({ state: "settle", step: step.current + 1});
+          handleHighlight(id, elementStyle[id.indexOf(":") != -1 ? "edge" : "node"]["settle"]);
+        }
+      });
     } else {
-      const type = currentStep.type;
-      currentStep.targets.forEach(target => {
+      const type = nextStep.type;
+      nextStep.targets.forEach(target => {
+        if (elementSettleState.current[target.id] === undefined)
+          elementSettleState.current[target.id] = [];
+        elementSettleState.current[target.id].push({ state: type, step: step.current + 1});
         handleHighlight(target.id, elementStyle[target.role][type]);
       });
     }
@@ -215,13 +220,15 @@ const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
   };
 
   const handleReset = () => {
-    handleRemoveExtraItem();
+    elementSettleState.current = {};
 
     graph?.nodes.forEach(node => {
       handleHighlight(node.id, elementStyle.node["default"]);
+      elementSettleState.current[node.id] = [{ state: "default", step: -1 }];
     });
     graph?.edges.forEach(edge => {
       handleHighlight(edge.id, elementStyle.edge["default"]);
+      elementSettleState.current[edge.id] = [{ state: "default", step: -1 }];
     });
   };
 
@@ -239,13 +246,6 @@ const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
     }
   };
 
-  const handleRemoveExtraItem = () => {
-    if (tempElement.current) {
-      g6.current?.removeItem((tempElement.current as Item).getID());
-      tempElement.current = undefined;
-    }
-  };
-
   const handleCopyResult = () => {
     const text = JSON.stringify(operateSequence);
     navigator.clipboard.writeText(text);
@@ -253,7 +253,7 @@ const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
 
   return (
     <div className="b-gray-200 flex flex-col b-rd-1 shadow-default">
-      <div className="h-[250px] flex of-hidden aspect-[5/3]" ref={wrapperDom}>
+      <div className="h-[220px] flex of-hidden aspect-[5/3]" ref={wrapperDom}>
         <div className="flex-auto" ref={g6Dom} />
       </div>
       <div className="px-3 py-2 b-none b-t-1 b-gray200 b-t-solid text-[.9em] flex gap-1 flex-items-center">

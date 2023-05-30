@@ -3,6 +3,7 @@ import { useRef } from "react";
 import AlgorithmSetting from "./AlgotithmSetting";
 import GraphSetting from "./GraphSetting";
 import SettingFormContext from "./SettingFormContext";
+import KeyboardLabel from "../KeyboardLabel";
 
 const SettingPanel = () => {
   const formData = useRef<GraphAPI.Setting>({
@@ -23,6 +24,10 @@ const SettingPanel = () => {
         <AlgorithmSetting />
 
       </Card>
+      <div className="mt-2 flex flex-col flex-items-end gap-2">
+        <KeyboardLabel reverse label="New Graph" keys={["Ctrl N"]} />
+        <KeyboardLabel reverse label="Run Algorithm" keys={["Ctrl R"]} />
+      </div>
     </SettingFormContext.Provider>
   );
 };

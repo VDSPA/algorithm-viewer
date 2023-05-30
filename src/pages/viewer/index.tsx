@@ -1,10 +1,11 @@
 import GraphContainer from "@/components/GraphContainer";
 import ProgressBar from "@/components/ProgressBar";
 import useSSPResult from "@/hooks/useSSPResult";
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { GraphContainerRef } from "@/components/GraphContainer";
 import SettingPanel from "@/components/SettingPanel";
 import { Button, Divider } from "@fluentui/react-components";
+import KeyboardLabel from "@/components/KeyboardLabel";
 
 const algorithms = [
   { name: "bfs" },
@@ -59,16 +60,16 @@ const ViewerPage = () => {
     } else false;
   };
 
-  const handleClickForward = () => {
+  const handleClickForward = useCallback(() => {
     graphManager.current.forEach(item => item.ref?.next());
-    if (stepRef.current + 1 <= maxLength) {
+    if (stepRef.current + 1 < maxLength) {
       stepRef.current++;
       setStep(stepRef.current);
       return true;
     } else false;
-  };
+  }, [maxLength]);
 
-  const handleClickPlay = () => {
+  const handleClickPlay = useCallback(() => {
     if (isPlay) {
       // stop
       setIsPlay(false);
@@ -84,18 +85,40 @@ const ViewerPage = () => {
         }
       }, 800);
     }
-  };
+  }, [isPlay, handleClickForward]);
+
+  const handleKeyboardEvent = useCallback((e: KeyboardEvent) => {
+    if (e.code === "Space") {
+      handleClickPlay();
+    } else if (e.code === "ArrowRight") {
+      handleClickForward();
+    } else if (e.code === "ArrowLeft") {
+      handleClickBack();
+    }
+
+  }, [handleClickPlay, handleClickForward, handleClickBack]);
+
+  useEffect(() => {
+    if (maxLength > 0) {
+      addEventListener("keydown", handleKeyboardEvent);
+    } else {
+      removeEventListener("keydown", handleKeyboardEvent);
+    }
+    return () => {
+      removeEventListener("keydown", handleKeyboardEvent);
+    };
+  }, [maxLength, handleKeyboardEvent]);
 
   return (
     <section className="px-8 h[100%] flex gap-4 flex-justify-center">
-      <section className="flex flex-col">
+      <section className="flex flex-col gap-4">
         <div className="grid grid-cols-2 grid-rows-2 grid-gap-4">
           {graphManager.current.map(item => (
             <GraphContainer ref={ref => item.ref = ref} name={item.name} key={item.name}/>
           ))}
         </div>
-        <div className="py-8">
-          <div className="flex flex-col gap-4 py-4 px-6 b-rd-2 shadow-default">
+        <div className="flex flex-col gap-1">
+          <div className="flex flex-auto flex-col gap-4 py-4 px-6 b-rd-2 shadow-default">
             { maxLength > 0 ?
               <>
                 <ProgressBar
@@ -123,6 +146,13 @@ const ViewerPage = () => {
               : <span className="c-primary font-bold b-rd-1">Please create a graph and click RUN ALGORITHMS button.</span>
             }
           </div>
+          { maxLength > 0 &&
+            <div className="flex flex-auto gap-2 flex-justify-end py-1">
+              <KeyboardLabel label="Play / Pause" keys={["Space"]} />
+              <KeyboardLabel label="Forward" keys={["Right"]} />
+              <KeyboardLabel label="Back" keys={["Left"]} />
+            </div>
+          }
         </div>
       </section>
       <section className="flex-none w-72">

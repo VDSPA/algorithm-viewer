@@ -5,7 +5,7 @@ declare namespace ShortPathAPI {
   }
 
   interface Step {
-    type: "traverse" | "settle" | "reset";
+    type: "traverse" | "settle" | "reset" | "finish";
     targets: Array<Target>;
   }
 }
