@@ -61,7 +61,7 @@ const ViewerPage = () => {
 
   const handleClickForward = () => {
     graphManager.current.forEach(item => item.ref?.next());
-    if (stepRef.current + 1 <= maxLength) {
+    if (stepRef.current + 1 < maxLength) {
       stepRef.current++;
       setStep(stepRef.current);
       return true;

@@ -1,7 +1,7 @@
 import useRandomGraph from "@/hooks/useRandomGraph";
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import G6 from "@antv/g6";
-import type { Graph, Item } from "@antv/g6";
+import type { Graph } from "@antv/g6";
 import useSetting from "@/hooks/useSetting";
 import useSSPResult from "@/hooks/useSSPResult";
 import elementStyle from "./elementStyle";
@@ -135,6 +135,12 @@ const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
     const currentStep = operateSequence[step.current];
     if (currentStep.type === "reset") {
       handleReset();
+    } else if (currentStep.type === "finish") {
+      Object.keys(elementSettleState.current).forEach(id => {
+        if (elementSettleState.current[id].slice(-1)[0].step === step.current) {
+          elementSettleState.current[id].pop();
+        }
+      });
     } else {
       currentStep.targets.forEach(target => {
         elementSettleState.current[target.id].pop();
@@ -151,7 +157,7 @@ const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
     const previousStep = operateSequence[step.current - 1];
     if (previousStep.type === "reset") {
       handleReset();
-    } else {
+    } else if (previousStep.type !== "finish") {
       const type = previousStep.type;
       previousStep.targets.forEach(target => {
         if (elementSettleState.current[target.id] === undefined)
@@ -173,7 +179,7 @@ const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
 
     // reset current
     // depends on element self state
-    if (step.current != -1) {
+    if (step.current !== -1) {
       const currentStep = operateSequence[step.current];
       if (currentStep.type === "reset") {
         handleReset();
@@ -191,6 +197,15 @@ const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
     const nextStep = operateSequence[step.current + 1];
     if (nextStep.type === "reset") {
       handleReset();
+    } else if (nextStep.type === "finish") {
+      Object.keys(elementSettleState.current).forEach(id => {
+        const target = elementSettleState.current[id];
+        if (target.slice(-1)[0].state === "traverse" && target.slice(-1)[0].step === step.current) {
+          // view finish as settle for a element
+          elementSettleState.current[id].push({ state: "settle", step: step.current + 1});
+          handleHighlight(id, elementStyle[id.indexOf(":") != -1 ? "edge" : "node"]["settle"]);
+        }
+      });
     } else {
       const type = nextStep.type;
       nextStep.targets.forEach(target => {
