@@ -1,7 +1,7 @@
 import { Field, Select, Button, SelectOnChangeData } from "@fluentui/react-components";
 import useRandomGraph from "@/hooks/useRandomGraph";
 import useSSPResult from "@/hooks/useSSPResult";
-import { useContext } from "react";
+import { useCallback, useContext, useEffect } from "react";
 import SettingFormContext from "./SettingFormContext";
 
 const AlgorithmSetting = () => {
@@ -19,11 +19,25 @@ const AlgorithmSetting = () => {
     navigator.clipboard.writeText(text);
   };
 
-  const handleRun = () => {
+  const handleRun = useCallback(() => {
     if (formData && matrix) {
       trigger(formData?.current, matrix);
     }
-  };
+  }, [formData, matrix, trigger]);
+
+  const handleKeyboardEvent = useCallback((e: KeyboardEvent) => {
+    if (e.code === "KeyR" && e.ctrlKey) {
+      handleRun();
+    }
+  }, [handleRun]);
+
+  useEffect(() => {
+    addEventListener("keydown", handleKeyboardEvent);
+
+    return () => {
+      removeEventListener("keydown", handleKeyboardEvent);
+    };
+  }, [handleKeyboardEvent]);
 
   return (
     <>

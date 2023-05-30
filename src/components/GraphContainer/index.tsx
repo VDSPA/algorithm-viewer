@@ -253,7 +253,7 @@ const GraphContainer = forwardRef<GraphContainerRef, IProps>((props, ref) => {
 
   return (
     <div className="b-gray-200 flex flex-col b-rd-1 shadow-default">
-      <div className="h-[250px] flex of-hidden aspect-[5/3]" ref={wrapperDom}>
+      <div className="h-[220px] flex of-hidden aspect-[5/3]" ref={wrapperDom}>
         <div className="flex-auto" ref={g6Dom} />
       </div>
       <div className="px-3 py-2 b-none b-t-1 b-gray200 b-t-solid text-[.9em] flex gap-1 flex-items-center">
