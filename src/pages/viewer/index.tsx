@@ -17,7 +17,7 @@ const algorithms = [
 const ViewerPage = () => {
   const [step, setStep] = useState(-1);
   const [isPlay, setIsPlay] = useState(false);
-  const timer = useRef<NodeJS.Timer>();
+  const timer = useRef<ReturnType<typeof setInterval>>();
   const stepRef = useRef(-1);
 
   const graphManager = useRef<{
@@ -114,12 +114,12 @@ const ViewerPage = () => {
       <section className="flex flex-col gap-4">
         <div className="grid grid-cols-2 grid-rows-2 grid-gap-4">
           {graphManager.current.map(item => (
-            <GraphContainer ref={ref => item.ref = ref} name={item.name} key={item.name}/>
+            <GraphContainer ref={ref => item.ref = ref} name={item.name} key={item.name} />
           ))}
         </div>
         <div className="flex flex-col gap-1">
           <div className="flex flex-auto flex-col gap-4 py-4 px-6 b-rd-2 shadow-default">
-            { maxLength > 0 ?
+            {maxLength > 0 ?
               <>
                 <ProgressBar
                   max={maxLength}
@@ -131,12 +131,12 @@ const ViewerPage = () => {
                 <Divider />
                 <div className="flex gap-2 flex-items-center">
                   <div className="c-primary font-bold b-rd-1 p-l-2">
-                    <span> { step + 1 } </span> / <span> { maxLength } </span>
+                    <span> {step + 1} </span> / <span> {maxLength} </span>
                   </div>
                   <div className="flex-auto" />
                   <div className="flex gap-2">
                     <Button appearance="primary" size="small" onClick={handleClickPlay}>
-                      { !isPlay ? "Play" : "Pause" }
+                      {!isPlay ? "Play" : "Pause"}
                     </Button>
                     <Button appearance="subtle" size="small" onClick={handleClickBack}>Step back</Button>
                     <Button size="small" onClick={handleClickForward}>Step forward</Button>
@@ -146,7 +146,7 @@ const ViewerPage = () => {
               : <span className="c-primary font-bold b-rd-1">Please create a graph and click RUN ALGORITHMS button.</span>
             }
           </div>
-          { maxLength > 0 &&
+          {maxLength > 0 &&
             <div className="flex flex-auto gap-2 flex-justify-end py-1">
               <KeyboardLabel label="Play / Pause" keys={["Space"]} />
               <KeyboardLabel label="Forward" keys={["Right"]} />
